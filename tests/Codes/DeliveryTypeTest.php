@@ -39,6 +39,10 @@ class DeliveryTypeTest extends PHPUnit_Framework_TestCase
                 'expected' => true,
             ],
             [
+                'code' => 9,
+                'expected' => true,
+            ],
+            [
                 'code' => 253125,
                 'expected' => false,
             ]

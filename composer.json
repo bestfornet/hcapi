@@ -1,7 +1,30 @@
 {
-  "name": "heureka/hcapi",
-  "description": "Heureka shopping cart API",
+  "name": "bestfornet/hcapi",
+  "description": "Heureka shopping cart API - Bestfornet fork with Depot API codes and tolerant price validation",
   "license": "MIT",
+  "type": "library",
+  "keywords": [
+    "heureka",
+    "marketplace",
+    "kosik-api",
+    "hcapi"
+  ],
+  "authors": [
+    {
+      "name": "Oldřich Taufer",
+      "email": "oldrich.taufer@heureka.cz",
+      "role": "Original author"
+    },
+    {
+      "name": "Bestfornet",
+      "email": "info@bestfornet.cz",
+      "homepage": "https://www.bestfornet.cz",
+      "role": "Fork maintainer"
+    }
+  ],
+  "replace": {
+    "heureka/hcapi": "1.0.1"
+  },
   "require": {
     "php": ">=5.4.0"
   },

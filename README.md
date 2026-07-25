@@ -2,12 +2,35 @@
 ----------
 Hcapi is a tool created for easier connection between shopping adviser Heureka.cz and shops which users of these services and shopping cart want.
 
+**About this fork**
+-------
+
+This is a Bestfornet fork of [heureka/hcapi](https://github.com/heureka/hcapi), which has been
+unmaintained since November 2018 (last release `v1.0.1`). The namespace stays `Hcapi\`, so the
+fork is a drop-in replacement — no code changes are needed when switching over.
+
+Differences against upstream `v1.0.1`:
+
+* **Depot API delivery type** — added `DeliveryType::DELIVERY_TYPE_DEPOT_API = 9`. Without it,
+  carts using Heureka's external pickup point providers fail validation.
+* **Depot API store type** — added `StoreType::STORE_TYPE_DEPOT_API = 3`, the store type used for
+  external pickup points (see the [depot-api shipper list](https://api.heureka.cz/depot-api/v1/delivery-places/getshippers)).
+* **Tolerant price validation** — upstream compared `count * price` against `priceTotal`, and the
+  sum of `priceTotal` against `priceSum`, using the strict `!==` operator. Comparing floats that way
+  rejects valid carts: prices are carried rounded to two decimal places, so binary representation
+  and per-unit rounding produce differences that are not errors. Both checks now compare with a
+  tolerance of `ProductsAvailability::PRICE_TOLERANCE` (0.01) per unit / per product, and the
+  exceptions report the expected and received value so mismatches can be diagnosed.
+
+Verified to run on PHP 8 — the source contains no constructs removed in PHP 7 or 8. The bundled
+test suite still targets PHPUnit 5 and is kept as it was upstream.
+
 **Usage**
 -------
 
 **Install by composer:**
 
-    composer require heureka/hcapi
+    composer require bestfornet/hcapi
 
 
 **Implementation**

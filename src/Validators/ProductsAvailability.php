@@ -10,6 +10,16 @@ use Hcapi\Services\ProductsAvailability AS ProductsAvailabilityService;
 class ProductsAvailability extends AbstractValidator
 {
     /**
+     * Difference tolerated between a computed and a reported price, per unit.
+     *
+     * Prices are carried by the API rounded to two decimal places, so
+     * count * price and priceTotal can legitimately differ by a hundredth
+     * per unit. The original implementation compared them with !==, which
+     * rejected valid carts over binary float representation alone.
+     */
+    const PRICE_TOLERANCE = 0.01;
+
+    /**
      * @var array
      */
     private $requiredItems = ['products', 'priceSum'];
@@ -188,7 +198,7 @@ class ProductsAvailability extends AbstractValidator
 
     /**
      * Checks variable type
-     * Checks if final price of product is right
+     * Checks if final price of product is right, within PRICE_TOLERANCE per unit
      *
      * @param $product
      *
@@ -198,13 +208,20 @@ class ProductsAvailability extends AbstractValidator
     {
         $this->checkVariableType($product[ProductsAvailabilityService::PRODUCT_PRICE_TOTAL], self::TYPE_FLOAT);
 
-        if ($product[ProductsAvailabilityService::PRODUCT_COUNT] * $product[ProductsAvailabilityService::PRODUCT_PRICE] !== $product[ProductsAvailabilityService::PRODUCT_PRICE_TOTAL]) {
-            throw new BadTotalPriceException('Product ' . $product[ProductsAvailabilityService::PRODUCT_ID] . ' has set bad price');
+        $count = $product[ProductsAvailabilityService::PRODUCT_COUNT];
+        $expected = $count * $product[ProductsAvailabilityService::PRODUCT_PRICE];
+        $reported = $product[ProductsAvailabilityService::PRODUCT_PRICE_TOTAL];
+
+        if (abs($expected - $reported) > max(self::PRICE_TOLERANCE, $count * self::PRICE_TOLERANCE)) {
+            throw new BadTotalPriceException(
+                'Product ' . $product[ProductsAvailabilityService::PRODUCT_ID] . ' has set bad price'
+                . ' (expected ' . $expected . ', got ' . $reported . ')'
+            );
         }
     }
 
     /**
-     * Checks if final price of products is right
+     * Checks if final price of products is right, within PRICE_TOLERANCE per product
      *
      * @param $responseData
      *
@@ -212,13 +229,17 @@ class ProductsAvailability extends AbstractValidator
      */
     private function validatePriceSum($responseData)
     {
-        $tmpPrice = 0;
-        foreach ($responseData[ProductsAvailabilityService::KEY_PRODUCTS] as $product) {
-            $tmpPrice += $product[ProductsAvailabilityService::PRODUCT_PRICE_TOTAL];
+        $products = $responseData[ProductsAvailabilityService::KEY_PRODUCTS];
+
+        $expected = 0.0;
+        foreach ($products as $product) {
+            $expected += $product[ProductsAvailabilityService::PRODUCT_PRICE_TOTAL];
         }
 
-        if ($tmpPrice !== $responseData[ProductsAvailabilityService::KEY_PRICE_SUM]) {
-            throw new BadSumPriceException('Price sum is bad');
+        $reported = $responseData[ProductsAvailabilityService::KEY_PRICE_SUM];
+
+        if (abs($expected - $reported) > max(self::PRICE_TOLERANCE, count($products) * self::PRICE_TOLERANCE)) {
+            throw new BadSumPriceException('Price sum is bad (expected ' . $expected . ', got ' . $reported . ')');
         }
     }
 

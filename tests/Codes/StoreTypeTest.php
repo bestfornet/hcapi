@@ -37,6 +37,10 @@ class StoreTypeTest extends PHPUnit_Framework_TestCase
                 'expected' => true,
             ],
             [
+                'code' => 3,
+                'expected' => true,
+            ],
+            [
                 'code' => 30,
                 'expected' => false,
             ]
